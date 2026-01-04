@@ -50,6 +50,7 @@ const BillList = () => {
           <tr>
             <th>Invoice</th>
             <th>Customer</th>
+            <th>Date</th>
             <th>Total</th>
             <th>Paid</th>
             <th>Due</th>
@@ -66,6 +67,18 @@ const BillList = () => {
               <td>
                 <Link to={`/customers/${b.id}`}>{b.name}</Link>
               </td>
+              {/* <td>₹{b.bill_date}</td> */}
+              <td>
+                {new Date(b.bill_date).toLocaleString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </td>
+
               <td>₹{Number(b.grand_total).toFixed(2)}</td>
               <td>₹{Number(b.paid_amount).toFixed(2)}</td>
               <td>₹{Number(b.due_amount).toFixed(2)}</td>

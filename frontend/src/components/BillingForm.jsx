@@ -26,6 +26,7 @@ const BillingForm = () => {
   const [loading, setLoading] = useState(false);
   const [takeAdvance, setTakeAdvance] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState("");
+  const [isGST, setIsGST] = useState(true);
 
   /* =======================
      CUSTOMER SEARCH
@@ -95,8 +96,8 @@ const BillingForm = () => {
     0
   );
 
-  const sgst = subtotal * 0.015;
-  const cgst = subtotal * 0.015;
+  const sgst = isGST ? subtotal * 0.015 : 0;
+  const cgst = isGST ? subtotal * 0.015 : 0;
   const grandTotal = subtotal + sgst + cgst;
 
   /* =======================
@@ -117,6 +118,11 @@ const BillingForm = () => {
 
     if (items.some((i) => !i.item_name || !i.weight_grams || !i.rate_per_10g)) {
       setError("All item fields are required");
+      return;
+    }
+
+    if (takeAdvance && Number(advanceAmount) > grandTotal) {
+      setError("Advance amount cannot exceed grand total");
       return;
     }
 
@@ -144,6 +150,7 @@ const BillingForm = () => {
         items,
         payment_mode: "cash",
         advance_amount: takeAdvance ? Number(advanceAmount) : 0,
+        is_gst: isGST,
         created_by: 1,
       });
 
@@ -326,9 +333,24 @@ const BillingForm = () => {
       )}
 
       <h3>Summary</h3>
+      <label>
+        <input
+          type="checkbox"
+          checked={isGST}
+          onChange={(e) => setIsGST(e.target.checked)}
+        />
+        Apply GST (3%)
+      </label>
+
       <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
-      <p>SGST (1.5%): ₹{sgst.toFixed(2)}</p>
-      <p>CGST (1.5%): ₹{cgst.toFixed(2)}</p>
+
+      {isGST && (
+        <>
+          <p>SGST (1.5%): ₹{sgst.toFixed(2)}</p>
+          <p>CGST (1.5%): ₹{cgst.toFixed(2)}</p>
+        </>
+      )}
+
       <h2>Grand Total: ₹{grandTotal.toFixed(2)}</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}

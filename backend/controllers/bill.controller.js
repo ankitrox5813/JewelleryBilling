@@ -4,37 +4,43 @@ import { generateInvoiceNo } from "../utils/invoiceNo.js";
 
 import { v4 as uuid } from "uuid";
 
+
 // export const createBill = async (req, res) => {
 //   const {
 //     customer_id,
 //     items,
 //     payment_mode,
-//     created_by
+//     advance_amount = 0,
+//     created_by,
+    
 //   } = req.body;
 
 //   let subtotal = 0;
-//   const invoice_no = "INV-" + uuid().slice(0, 8);
+//   const invoice_no = generateInvoiceNo();
 
 //   const conn = await pool.getConnection();
 //   await conn.beginTransaction();
 
 //   try {
+//     // 1️⃣ Insert bill (initial)
 //     const [billResult] = await conn.query(
 //       `INSERT INTO bills
-//        (invoice_no, customer_id, bill_date, subtotal, sgst, cgst, grand_total, payment_mode, created_by)
-//        VALUES (?, ?, NOW(), 0, 0, 0, 0, ?, ?)`,
+//        (invoice_no, customer_id, bill_date, subtotal, sgst, cgst, grand_total,
+//         paid_amount, due_amount, payment_status, payment_mode, created_by)
+//        VALUES (?, ?, NOW(), 0, 0, 0, 0, 0, 0, 'due', ?, ?)`,
 //       [invoice_no, customer_id, payment_mode, created_by]
 //     );
 
 //     const billId = billResult.insertId;
 
+//     // Insert items
 //     for (const item of items) {
 //       const metal_amount = (item.weight_grams / 10) * item.rate_per_10g;
 
 //       const making_amount =
 //         item.making_charge_type === "percent"
-//           ? metal_amount * (item.making_charge_value / 100)
-//           : item.making_charge_value;
+//           ? (metal_amount * item.making_charge_value) / 100
+//           : Number(item.making_charge_value);
 
 //       const total_amount = metal_amount + making_amount;
 //       subtotal += total_amount;
@@ -56,32 +62,69 @@ import { v4 as uuid } from "uuid";
 //           item.making_charge_value,
 //           metal_amount,
 //           making_amount,
-//           total_amount
+//           total_amount,
 //         ]
 //       );
 //     }
 
+//     //  GST
 //     const sgst = subtotal * 0.015;
 //     const cgst = subtotal * 0.015;
 //     const grand_total = subtotal + sgst + cgst;
 
+//     //  Payment logic
+//     const paid_amount = Number(advance_amount || 0);
+//     const due_amount = grand_total - paid_amount;
+
+//     let payment_status = "due";
+//     if (paid_amount >= grand_total) payment_status = "paid";
+//     else if (paid_amount > 0) payment_status = "partial";
+
+//     //  Update bill totals
 //     await conn.query(
 //       `UPDATE bills
-//        SET subtotal=?, sgst=?, cgst=?, grand_total=?
+//        SET subtotal=?, sgst=?, cgst=?, grand_total=?,
+//            paid_amount=?, due_amount=?, payment_status=?
 //        WHERE id=?`,
-//       [subtotal, sgst, cgst, grand_total, billId]
+//       [
+//         subtotal,
+//         sgst,
+//         cgst,
+//         grand_total,
+//         paid_amount,
+//         due_amount,
+//         payment_status,
+//         billId,
+//       ]
 //     );
 
-//     await conn.commit();
-//     res.json({ invoice_no, bill_id: billId });
+//     //  Insert advance payment (if any)
+//     if (paid_amount > 0) {
+//       await conn.query(
+//         `INSERT INTO payments (bill_id, payment_mode, amount)
+//          VALUES (?, ?, ?)`,
+//         [billId, payment_mode, paid_amount]
+//       );
+//     }
 
+//     await conn.commit();
+
+//     res.json({
+//       bill_id: billId,
+//       invoice_no,
+//       payment_status,
+//       paid_amount,
+//       due_amount,
+//     });
 //   } catch (err) {
 //     await conn.rollback();
-//     res.status(500).json(err);
+//     res.status(500).json({ error: err.message });
 //   } finally {
 //     conn.release();
 //   }
 // };
+
+
 
 export const createBill = async (req, res) => {
   const {
@@ -90,6 +133,7 @@ export const createBill = async (req, res) => {
     payment_mode,
     advance_amount = 0,
     created_by,
+    is_gst = true,
   } = req.body;
 
   let subtotal = 0;
@@ -99,24 +143,37 @@ export const createBill = async (req, res) => {
   await conn.beginTransaction();
 
   try {
-    // 1️⃣ Insert bill (initial)
+    /* ============================
+       1️⃣ INSERT BILL (INITIAL)
+    ============================ */
     const [billResult] = await conn.query(
       `INSERT INTO bills
-       (invoice_no, customer_id, bill_date, subtotal, sgst, cgst, grand_total,
-        paid_amount, due_amount, payment_status, payment_mode, created_by)
-       VALUES (?, ?, NOW(), 0, 0, 0, 0, 0, 0, 'due', ?, ?)`,
-      [invoice_no, customer_id, payment_mode, created_by]
+       (invoice_no, customer_id, bill_date, is_gst,
+        subtotal, sgst, cgst, grand_total,
+        paid_amount, due_amount, payment_status,
+        payment_mode, created_by)
+       VALUES (?, ?, NOW(), ?, 0, 0, 0, 0, 0, 0, 'due', ?, ?)`,
+      [
+        invoice_no,
+        customer_id,
+        is_gst ? 1 : 0,
+        payment_mode,
+        created_by,
+      ]
     );
 
     const billId = billResult.insertId;
 
-    // Insert items
+    /* ============================
+       2️⃣ INSERT BILL ITEMS
+    ============================ */
     for (const item of items) {
-      const metal_amount = (item.weight_grams / 10) * item.rate_per_10g;
+      const metal_amount =
+        (Number(item.weight_grams) / 10) * Number(item.rate_per_10g);
 
       const making_amount =
         item.making_charge_type === "percent"
-          ? (metal_amount * item.making_charge_value) / 100
+          ? (metal_amount * Number(item.making_charge_value)) / 100
           : Number(item.making_charge_value);
 
       const total_amount = metal_amount + making_amount;
@@ -144,20 +201,51 @@ export const createBill = async (req, res) => {
       );
     }
 
-    //  GST
-    const sgst = subtotal * 0.015;
-    const cgst = subtotal * 0.015;
-    const grand_total = subtotal + sgst + cgst;
+    subtotal = Number(subtotal.toFixed(2));
 
-    //  Payment logic
+    /* ============================
+       3️⃣ GST / NON-GST LOGIC
+    ============================ */
+    let sgst = 0;
+    let cgst = 0;
+
+    if (is_gst) {
+      sgst = subtotal * 0.015;
+      cgst = subtotal * 0.015;
+    }
+
+    sgst = Number(sgst.toFixed(2));
+    cgst = Number(cgst.toFixed(2));
+
+    const grand_total = Number(
+      (subtotal + sgst + cgst).toFixed(2)
+    );
+
+    /* ============================
+       4️⃣ ADVANCE VALIDATION
+    ============================ */
     const paid_amount = Number(advance_amount || 0);
-    const due_amount = grand_total - paid_amount;
+
+    if (paid_amount < 0) {
+      throw new Error("Advance amount cannot be negative");
+    }
+
+    if (paid_amount > grand_total) {
+      throw new Error("Advance amount cannot exceed bill total");
+    }
+
+    const due_amount = Math.max(
+      Number((grand_total - paid_amount).toFixed(2)),
+      0
+    );
 
     let payment_status = "due";
     if (paid_amount >= grand_total) payment_status = "paid";
     else if (paid_amount > 0) payment_status = "partial";
 
-    //  Update bill totals
+    /* ============================
+       5️⃣ UPDATE BILL TOTALS
+    ============================ */
     await conn.query(
       `UPDATE bills
        SET subtotal=?, sgst=?, cgst=?, grand_total=?,
@@ -175,7 +263,9 @@ export const createBill = async (req, res) => {
       ]
     );
 
-    //  Insert advance payment (if any)
+    /* ============================
+       6️⃣ INSERT ADVANCE PAYMENT
+    ============================ */
     if (paid_amount > 0) {
       await conn.query(
         `INSERT INTO payments (bill_id, payment_mode, amount)
@@ -186,12 +276,20 @@ export const createBill = async (req, res) => {
 
     await conn.commit();
 
+    /* ============================
+       7️⃣ RESPONSE
+    ============================ */
     res.json({
       bill_id: billId,
       invoice_no,
-      payment_status,
+      subtotal,
+      sgst,
+      cgst,
+      grand_total,
       paid_amount,
       due_amount,
+      payment_status,
+      is_gst,
     });
   } catch (err) {
     await conn.rollback();
@@ -244,9 +342,17 @@ export const getBillPDF = async (req, res) => {
     [billId]
   );
 
+  const [payments] = await pool.query(
+  `SELECT payment_mode, amount, payment_date
+   FROM payments
+   WHERE bill_id = ?
+   ORDER BY payment_date ASC`,
+  [billId]
+);
+
   if (!bill) return res.status(404).send("Bill not found");
 
-  generateInvoicePDF(bill, items, res);
+  generateInvoicePDF(bill, items, payments, res);
 };
 
 export const listBills = async (req, res) => {

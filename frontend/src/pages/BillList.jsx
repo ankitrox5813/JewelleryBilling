@@ -62,10 +62,16 @@ const BillList = () => {
         <tbody>
           {bills.map((b) => (
             <tr key={b.id}>
-              <td>{b.invoice_no}</td>
+              {/* <td>{b.invoice_no}</td> */}
+              <td>
+                <Link to={`/bills/${b.id}`} style={{ fontWeight: "bold" }}>
+                  {b.invoice_no}
+                </Link>
+              </td>
+
               {/* <td>{b.name}</td> */}
               <td>
-                <Link to={`/customers/${b.id}`}>{b.name}</Link>
+                <Link to={`/customers/${b.customer_id}`}>{b.name}</Link>
               </td>
               {/* <td>₹{b.bill_date}</td> */}
               <td>
@@ -83,7 +89,7 @@ const BillList = () => {
               <td>₹{Number(b.paid_amount).toFixed(2)}</td>
               <td>₹{Number(b.due_amount).toFixed(2)}</td>
               <td>{b.payment_status.toUpperCase()}</td>
-              <td>
+              {/* <td>
                 <button
                   onClick={() =>
                     window.open(`http://localhost:5000/api/bills/${b.id}/pdf`)
@@ -94,6 +100,30 @@ const BillList = () => {
 
                 {b.due_amount > 0 && (
                   <button onClick={() => openPaymentModal(b)}>
+                    ➕ Add Payment
+                  </button>
+                )}
+              </td> */}
+              <td>
+                <button
+                  onClick={() =>
+                    window.open(`http://localhost:5000/api/bills/${b.id}/pdf`)
+                  }
+                >
+                  🖨 Print
+                </button>
+
+                {Number(b.paid_amount) === 0 && (
+                  <Link to={`/bills/${b.id}/edit`} style={{ marginLeft: 8 }}>
+                    ✏️ Edit
+                  </Link>
+                )}
+
+                {b.due_amount > 0 && (
+                  <button
+                    style={{ marginLeft: 8 }}
+                    onClick={() => openPaymentModal(b)}
+                  >
                     ➕ Add Payment
                   </button>
                 )}
@@ -152,7 +182,6 @@ const BillList = () => {
         </div>
       )}
 
-      <Link to="/">New Bill</Link>
     </div>
   );
 };

@@ -1,13 +1,23 @@
 import BillingForm from "../components/BillingForm";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 const BillingPage = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
   return (
     <div style={{ padding: 20 }}>
-      
+     
+
+      {/* Form */}
       <BillingForm />
-      <Link to="/bills">View Bills</Link>
-      
+
+      {/* Footer Links */}
+      {!isEditMode && (
+        <div style={{ marginTop: 15 }}>
+          <Link to="/bills">View Bills</Link>
+        </div>
+      )}
     </div>
   );
 };

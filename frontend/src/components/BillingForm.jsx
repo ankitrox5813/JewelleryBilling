@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 
 const emptyItem = {
@@ -15,6 +16,10 @@ const emptyItem = {
 };
 
 const BillingForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditMode = Boolean(id);
+
   const [customer, setCustomer] = useState({
     id: null,
     name: "",
@@ -24,9 +29,58 @@ const BillingForm = () => {
   const [items, setItems] = useState([{ ...emptyItem }]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const [takeAdvance, setTakeAdvance] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState("");
   const [isGST, setIsGST] = useState(true);
+
+  /* =======================
+     LOAD BILL (EDIT MODE)
+  ======================= */
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const loadBill = async () => {
+      try {
+        const res = await api.get(`/bills/${id}`);
+        const { bill, items } = res.data;
+
+        if (Number(bill.paid_amount) > 0) {
+          alert("❌ Bill cannot be edited after payment");
+          navigate("/bills");
+          return;
+        }
+
+        setCustomer({
+          id: bill.customer_id,
+          name: bill.customer_name,
+          phone: bill.phone,
+        });
+
+        setItems(
+          items.map((i) => ({
+            item_name: i.item_name,
+            metal: i.metal,
+            purity: i.purity,
+            weight_grams: Number(i.weight_grams),
+            rate_per_10g: Number(i.rate_per_10g),
+            making_charge_type: i.making_charge_type,
+            making_charge_value: Number(i.making_charge_value),
+            metal_amount: Number(i.metal_amount),
+            making_amount: Number(i.making_amount),
+            total_amount: Number(i.total_amount),
+          }))
+        );
+
+        setIsGST(Boolean(bill.is_gst));
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load bill");
+      }
+    };
+
+    loadBill();
+  }, [id, isEditMode, navigate]);
 
   /* =======================
      CUSTOMER SEARCH
@@ -101,7 +155,7 @@ const BillingForm = () => {
   const grandTotal = subtotal + sgst + cgst;
 
   /* =======================
-     SAVE BILL
+     SAVE / UPDATE BILL
   ======================= */
   const saveBill = async () => {
     setError("");
@@ -121,7 +175,7 @@ const BillingForm = () => {
       return;
     }
 
-    if (takeAdvance && Number(advanceAmount) > grandTotal) {
+    if (!isEditMode && takeAdvance && Number(advanceAmount) > grandTotal) {
       setError("Advance amount cannot exceed grand total");
       return;
     }
@@ -129,7 +183,6 @@ const BillingForm = () => {
     try {
       setLoading(true);
 
-      // ✅ Use existing customer OR create new
       const customerId = customer.id
         ? customer.id
         : (
@@ -139,25 +192,31 @@ const BillingForm = () => {
             })
           ).data.customer_id;
 
-      //   await api.post("/bills", {
-      //     customer_id: customerId,
-      //     items,
-      //     payment_mode: "cash",
-      //     created_by: 1,
-      //   });
-      await api.post("/bills", {
-        customer_id: customerId,
-        items,
-        payment_mode: "cash",
-        advance_amount: takeAdvance ? Number(advanceAmount) : 0,
-        is_gst: isGST,
-        created_by: 1,
-      });
+      if (isEditMode) {
+        await api.put(`/bills/${id}`, {
+          items,
+          is_gst: isGST,
+        });
 
-      alert("✅ Bill saved successfully");
+        alert("✅ Bill updated successfully");
+        navigate("/bills");
+      } else {
+        await api.post("/bills", {
+          customer_id: customerId,
+          items,
+          payment_mode: "cash",
+          advance_amount: takeAdvance ? Number(advanceAmount) : 0,
+          is_gst: isGST,
+          created_by: 1,
+        });
 
-      setCustomer({ id: null, name: "", phone: "" });
-      setItems([{ ...emptyItem }]);
+        alert("✅ Bill saved successfully");
+
+        setCustomer({ id: null, name: "", phone: "" });
+        setItems([{ ...emptyItem }]);
+        setTakeAdvance(false);
+        setAdvanceAmount("");
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to save bill");
@@ -171,7 +230,7 @@ const BillingForm = () => {
   ======================= */
   return (
     <div style={{ maxWidth: 1100 }}>
-      <h2>Jewellery Billing</h2>
+
 
       <h3>Customer Details</h3>
 
@@ -180,6 +239,7 @@ const BillingForm = () => {
         maxLength="10"
         placeholder="Phone Number"
         value={customer.phone}
+        disabled={isEditMode}
         onChange={(e) => {
           const phone = e.target.value;
           setCustomer({ id: null, name: "", phone });
@@ -214,7 +274,6 @@ const BillingForm = () => {
         <tbody>
           {items.map((item, i) => (
             <tr key={i}>
-              {/* Item name */}
               <td>
                 <input
                   value={item.item_name}
@@ -222,7 +281,6 @@ const BillingForm = () => {
                 />
               </td>
 
-              {/* Metal */}
               <td>
                 <select
                   value={item.metal}
@@ -233,7 +291,6 @@ const BillingForm = () => {
                 </select>
               </td>
 
-              {/* Purity */}
               <td>
                 <select
                   value={item.purity}
@@ -246,7 +303,6 @@ const BillingForm = () => {
                 </select>
               </td>
 
-              {/* Weight */}
               <td>
                 <input
                   type="number"
@@ -258,7 +314,6 @@ const BillingForm = () => {
                 />
               </td>
 
-              {/* Rate */}
               <td>
                 <input
                   type="number"
@@ -269,7 +324,6 @@ const BillingForm = () => {
                 />
               </td>
 
-              {/* Making */}
               <td>
                 <select
                   value={item.making_charge_type}
@@ -283,11 +337,6 @@ const BillingForm = () => {
 
                 <input
                   type="number"
-                  placeholder={
-                    item.making_charge_type === "percent"
-                      ? "Making %"
-                      : "Making ₹"
-                  }
                   value={item.making_charge_value}
                   onChange={(e) =>
                     updateItem(i, "making_charge_value", e.target.value)
@@ -295,10 +344,8 @@ const BillingForm = () => {
                 />
               </td>
 
-              {/* Total */}
               <td>₹ {item.total_amount.toFixed(2)}</td>
 
-              {/* Remove */}
               <td>
                 <button onClick={() => removeItem(i)}>❌</button>
               </td>
@@ -309,30 +356,35 @@ const BillingForm = () => {
 
       <button onClick={addItem}>➕ Add Item</button>
 
-      <h3>Payment</h3>
+      {!isEditMode && (
+        <>
+          <h3>Payment</h3>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={takeAdvance}
-          onChange={(e) => {
-            setTakeAdvance(e.target.checked);
-            if (!e.target.checked) setAdvanceAmount("");
-          }}
-        />
-        Take advance payment
-      </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={takeAdvance}
+              onChange={(e) => {
+                setTakeAdvance(e.target.checked);
+                if (!e.target.checked) setAdvanceAmount("");
+              }}
+            />
+            Take advance payment
+          </label>
 
-      {takeAdvance && (
-        <input
-          type="number"
-          placeholder="Advance Amount"
-          value={advanceAmount}
-          onChange={(e) => setAdvanceAmount(e.target.value)}
-        />
+          {takeAdvance && (
+            <input
+              type="number"
+              placeholder="Advance Amount"
+              value={advanceAmount}
+              onChange={(e) => setAdvanceAmount(e.target.value)}
+            />
+          )}
+        </>
       )}
 
       <h3>Summary</h3>
+
       <label>
         <input
           type="checkbox"
@@ -356,7 +408,7 @@ const BillingForm = () => {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <button disabled={loading} onClick={saveBill}>
-        {loading ? "Saving..." : "💾 Save Bill"}
+        {loading ? "Saving..." : isEditMode ? "✏️ Update Bill" : "💾 Save Bill"}
       </button>
     </div>
   );

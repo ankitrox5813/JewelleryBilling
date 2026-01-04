@@ -1,53 +1,84 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 
 const CustomerProfile = () => {
   const { id } = useParams();
-  const [data, setData] = useState(null);
+  const [customer, setCustomer] = useState(null);
+  const [bills, setBills] = useState([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    api.get(`/customers/${id}/summary`).then((res) => {
-      setData(res.data);
-    });
-  }, [id]);
+    loadProfile();
+  }, []);
 
-  if (!data) return <p>Loading...</p>;
+  const loadProfile = async () => {
+    const res = await api.get(`/customers/${id}`);
+    setCustomer(res.data.customer);
+    setBills(res.data.bills);
+  };
 
-  const { summary, dueBills } = data;
+  if (!customer) return <p>Loading...</p>;
 
   return (
     <div>
-      <h2>Customer Profile</h2>
+      <Link to="/customers">← Back to Customers</Link>
 
-      <p>Total Bills: {summary.total_bills}</p>
-      <p>Total Amount: ₹{Number(summary.total_amount).toFixed(2)}</p>
-      <p>Total Paid: ₹{Number(summary.total_paid).toFixed(2)}</p>
-      <h3>Total Due: ₹{Number(summary.total_due).toFixed(2)}</h3>
+      <h2>{customer.name}</h2>
+      <p>📞 {customer.phone}</p>
 
-      {dueBills.length > 0 && (
-        <>
-          <h3>Pending Bills</h3>
-          <table border="1" cellPadding="5">
-            <thead>
-              <tr>
-                <th>Invoice</th>
-                <th>Date</th>
-                <th>Due</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dueBills.map((b) => (
-                <tr key={b.id}>
-                  <td>{b.invoice_no}</td>
-                  <td>{new Date(b.bill_date).toLocaleDateString()}</td>
-                  <td>₹{Number(b.due_amount).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+      <h3>Bills</h3>
+
+      <table border="1" width="100%" cellPadding="6">
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Paid</th>
+            <th>Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        {/* ✅ YOUR CODE GOES EXACTLY HERE */}
+        <tbody>
+          {bills.map((b) => (
+            <tr
+              key={b.id}
+              onClick={() =>
+                navigate(`/bills/${b.id}`)
+              }
+              style={{
+                cursor: "pointer",
+                backgroundColor:
+                  b.payment_status === "due"
+                    ? "#ffe6e6"
+                    : b.payment_status === "partial"
+                    ? "#fff7cc"
+                    : "transparent",
+              }}
+            >
+              <td>{b.invoice_no}</td>
+              <td>
+                {new Date(b.bill_date).toLocaleString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </td>
+              <td>₹{Number(b.grand_total).toFixed(2)}</td>
+              <td>₹{Number(b.paid_amount).toFixed(2)}</td>
+              <td>₹{Number(b.due_amount).toFixed(2)}</td>
+              <td>{b.payment_status.toUpperCase()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

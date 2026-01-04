@@ -51,3 +51,45 @@ export const customerSummary = async (req, res) => {
 
   res.json({ summary, dueBills });
 };
+
+export const listCustomers = async (req, res) => {
+  const [rows] = await pool.query(`
+    SELECT 
+      c.id,
+      c.name,
+      c.phone,
+      COUNT(DISTINCT b.id) AS total_bills,
+      COALESCE(SUM(b.due_amount), 0) AS total_due
+    FROM customers c
+    LEFT JOIN bills b ON b.customer_id = c.id
+    GROUP BY c.id
+    ORDER BY c.name
+  `);
+
+  res.json(rows);
+};
+
+export const getCustomerProfile = async (req, res) => {
+  const customerId = req.params.id;
+
+  const [[customer]] = await pool.query(
+    "SELECT * FROM customers WHERE id = ?",
+    [customerId]
+  );
+
+  if (!customer) {
+    return res.status(404).json({ message: "Customer not found" });
+  }
+
+  const [bills] = await pool.query(
+    `
+    SELECT id, invoice_no, bill_date, grand_total, paid_amount, due_amount, payment_status
+    FROM bills
+    WHERE customer_id = ?
+    ORDER BY bill_date DESC
+    `,
+    [customerId]
+  );
+
+  res.json({ customer, bills });
+};

@@ -15,7 +15,7 @@ const BillingPage = () => {
       {/* Footer Links */}
       {!isEditMode && (
         <div style={{ marginTop: 15 }}>
-          <Link to="/bills">View Bills</Link>
+          {/* <Link to="/bills">View Bills</Link> */}
         </div>
       )}
     </div>

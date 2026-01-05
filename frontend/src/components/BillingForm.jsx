@@ -229,163 +229,158 @@ const BillingForm = () => {
      UI
   ======================= */
   return (
-    <div style={{ maxWidth: 1100 }}>
+  <div className="max-w-6xl mx-auto px-4 pb-10">
+    {/* Page Title */}
+    <h1 className="text-xl font-semibold mb-6">
+      {isEditMode ? "Edit Bill" : "New Bill"}
+    </h1>
 
+    {/* ===== Customer Card ===== */}
+    <div className="bg-white/80 backdrop-blur rounded-xl shadow p-5 mb-6">
+      <h3 className="font-medium mb-4">Customer Details</h3>
 
-      <h3>Customer Details</h3>
+      <div className="grid md:grid-cols-2 gap-4">
+        <input
+          className="input"
+          type="tel"
+          maxLength="10"
+          placeholder="Phone Number"
+          value={customer.phone}
+          disabled={isEditMode}
+          onChange={(e) => {
+            const phone = e.target.value;
+            setCustomer({ id: null, name: "", phone });
+            if (phone.length === 10) searchCustomer(phone);
+          }}
+        />
 
-      <input
-        type="tel"
-        maxLength="10"
-        placeholder="Phone Number"
-        value={customer.phone}
-        disabled={isEditMode}
-        onChange={(e) => {
-          const phone = e.target.value;
-          setCustomer({ id: null, name: "", phone });
-          if (phone.length === 10) searchCustomer(phone);
-        }}
-      />
+        <input
+          className="input"
+          placeholder="Customer Name"
+          value={customer.name}
+          onChange={(e) =>
+            setCustomer((prev) => ({ ...prev, name: e.target.value }))
+          }
+        />
+      </div>
+    </div>
 
-      <input
-        placeholder="Customer Name"
-        value={customer.name}
-        onChange={(e) =>
-          setCustomer((prev) => ({ ...prev, name: e.target.value }))
-        }
-      />
+    {/* ===== Items ===== */}
+    <div className="bg-white/80 backdrop-blur rounded-xl shadow p-5 mb-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium">Items</h3>
+        <button onClick={addItem} className="btn-secondary">
+          ➕ Add Item
+        </button>
+      </div>
 
-      <h3>Items</h3>
-
-      <table width="100%" border="1" cellPadding="5">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Metal</th>
-            <th>Purity</th>
-            <th>Wt (g)</th>
-            <th>Rate /10g</th>
-            <th>Making</th>
-            <th>Total ₹</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {items.map((item, i) => (
-            <tr key={i}>
-              <td>
-                <input
-                  value={item.item_name}
-                  onChange={(e) => updateItem(i, "item_name", e.target.value)}
-                />
-              </td>
-
-              <td>
-                <select
-                  value={item.metal}
-                  onChange={(e) => updateItem(i, "metal", e.target.value)}
-                >
-                  <option value="gold">Gold</option>
-                  <option value="silver">Silver</option>
-                </select>
-              </td>
-
-              <td>
-                <select
-                  value={item.purity}
-                  onChange={(e) => updateItem(i, "purity", e.target.value)}
-                >
-                  <option value="24K">24K</option>
-                  <option value="22K">22K</option>
-                  <option value="18K">18K</option>
-                  <option value="Silver">Silver</option>
-                </select>
-              </td>
-
-              <td>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={item.weight_grams}
-                  onChange={(e) =>
-                    updateItem(i, "weight_grams", e.target.value)
-                  }
-                />
-              </td>
-
-              <td>
-                <input
-                  type="number"
-                  value={item.rate_per_10g}
-                  onChange={(e) =>
-                    updateItem(i, "rate_per_10g", e.target.value)
-                  }
-                />
-              </td>
-
-              <td>
-                <select
-                  value={item.making_charge_type}
-                  onChange={(e) =>
-                    updateItem(i, "making_charge_type", e.target.value)
-                  }
-                >
-                  <option value="fixed">₹ Fixed</option>
-                  <option value="percent">% Percent</option>
-                </select>
-
-                <input
-                  type="number"
-                  value={item.making_charge_value}
-                  onChange={(e) =>
-                    updateItem(i, "making_charge_value", e.target.value)
-                  }
-                />
-              </td>
-
-              <td>₹ {item.total_amount.toFixed(2)}</td>
-
-              <td>
-                <button onClick={() => removeItem(i)}>❌</button>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border">
+          <thead className="bg-amber-100">
+            <tr>
+              <th className="th">Item</th>
+              <th className="th">Metal</th>
+              <th className="th">Purity</th>
+              <th className="th">Wt (g)</th>
+              <th className="th">Rate /10g</th>
+              <th className="th">Making</th>
+              <th className="th">Total</th>
+              <th className="th"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
 
-      <button onClick={addItem}>➕ Add Item</button>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i} className="border-t">
+                <td><input className="input-sm" value={item.item_name}
+                  onChange={(e) => updateItem(i, "item_name", e.target.value)} /></td>
 
-      {!isEditMode && (
-        <>
-          <h3>Payment</h3>
+                <td>
+                  <select className="input-sm" value={item.metal}
+                    onChange={(e) => updateItem(i, "metal", e.target.value)}>
+                    <option value="gold">Gold</option>
+                    <option value="silver">Silver</option>
+                  </select>
+                </td>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={takeAdvance}
-              onChange={(e) => {
-                setTakeAdvance(e.target.checked);
-                if (!e.target.checked) setAdvanceAmount("");
-              }}
-            />
-            Take advance payment
-          </label>
+                <td>
+                  <select className="input-sm" value={item.purity}
+                    onChange={(e) => updateItem(i, "purity", e.target.value)}>
+                    <option>24K</option>
+                    <option>22K</option>
+                    <option>18K</option>
+                    <option>Silver</option>
+                  </select>
+                </td>
 
-          {takeAdvance && (
-            <input
-              type="number"
-              placeholder="Advance Amount"
-              value={advanceAmount}
-              onChange={(e) => setAdvanceAmount(e.target.value)}
-            />
-          )}
-        </>
-      )}
+                <td><input className="input-sm" type="number" value={item.weight_grams}
+                  onChange={(e) => updateItem(i, "weight_grams", e.target.value)} /></td>
 
-      <h3>Summary</h3>
+                <td><input className="input-sm" type="number" value={item.rate_per_10g}
+                  onChange={(e) => updateItem(i, "rate_per_10g", e.target.value)} /></td>
 
-      <label>
+                <td className="space-y-1">
+                  <select className="input-sm" value={item.making_charge_type}
+                    onChange={(e) => updateItem(i, "making_charge_type", e.target.value)}>
+                    <option value="fixed">₹ Fixed</option>
+                    <option value="percent">%</option>
+                  </select>
+
+                  <input className="input-sm" type="number"
+                    value={item.making_charge_value}
+                    onChange={(e) => updateItem(i, "making_charge_value", e.target.value)} />
+                </td>
+
+                <td className="font-medium">
+                  ₹ {item.total_amount.toFixed(2)}
+                </td>
+
+                <td>
+                  <button onClick={() => removeItem(i)} className="text-red-500">
+                    ❌
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* ===== Payment (Create only) ===== */}
+    {!isEditMode && (
+      <div className="bg-white/80 backdrop-blur rounded-xl shadow p-5 mb-6">
+        <h3 className="font-medium mb-3">Payment</h3>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={takeAdvance}
+            onChange={(e) => {
+              setTakeAdvance(e.target.checked);
+              if (!e.target.checked) setAdvanceAmount("");
+            }}
+          />
+          Take advance payment
+        </label>
+
+        {takeAdvance && (
+          <input
+            className="input mt-3 w-40"
+            type="number"
+            placeholder="Advance Amount"
+            value={advanceAmount}
+            onChange={(e) => setAdvanceAmount(e.target.value)}
+          />
+        )}
+      </div>
+    )}
+
+    {/* ===== Summary ===== */}
+    <div className="bg-white/90 backdrop-blur rounded-xl shadow p-5">
+      <h3 className="font-medium mb-3">Summary</h3>
+
+      <label className="flex items-center gap-2 mb-3 text-sm">
         <input
           type="checkbox"
           checked={isGST}
@@ -394,24 +389,217 @@ const BillingForm = () => {
         Apply GST (3%)
       </label>
 
-      <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
+      <div className="space-y-1 text-sm">
+        <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
+        {isGST && (
+          <>
+            <p>SGST: ₹{sgst.toFixed(2)}</p>
+            <p>CGST: ₹{cgst.toFixed(2)}</p>
+          </>
+        )}
+      </div>
 
-      {isGST && (
-        <>
-          <p>SGST (1.5%): ₹{sgst.toFixed(2)}</p>
-          <p>CGST (1.5%): ₹{cgst.toFixed(2)}</p>
-        </>
-      )}
+      <div className="text-xl font-semibold mt-4">
+        Grand Total: ₹{grandTotal.toFixed(2)}
+      </div>
 
-      <h2>Grand Total: ₹{grandTotal.toFixed(2)}</h2>
+      {error && <p className="text-red-500 mt-3">{error}</p>}
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <button disabled={loading} onClick={saveBill}>
+      <button
+        disabled={loading}
+        onClick={saveBill}
+        className="btn-primary mt-4"
+      >
         {loading ? "Saving..." : isEditMode ? "✏️ Update Bill" : "💾 Save Bill"}
       </button>
     </div>
-  );
+  </div>
+);
+
+  // return (
+  //   <div style={{ maxWidth: 1100 }}>
+
+
+  //     <h3>Customer Details</h3>
+
+  //     <input
+  //       type="tel"
+  //       maxLength="10"
+  //       placeholder="Phone Number"
+  //       value={customer.phone}
+  //       disabled={isEditMode}
+  //       onChange={(e) => {
+  //         const phone = e.target.value;
+  //         setCustomer({ id: null, name: "", phone });
+  //         if (phone.length === 10) searchCustomer(phone);
+  //       }}
+  //     />
+
+  //     <input
+  //       placeholder="Customer Name"
+  //       value={customer.name}
+  //       onChange={(e) =>
+  //         setCustomer((prev) => ({ ...prev, name: e.target.value }))
+  //       }
+  //     />
+
+  //     <h3>Items</h3>
+
+  //     <table width="100%" border="1" cellPadding="5">
+  //       <thead>
+  //         <tr>
+  //           <th>Item</th>
+  //           <th>Metal</th>
+  //           <th>Purity</th>
+  //           <th>Wt (g)</th>
+  //           <th>Rate /10g</th>
+  //           <th>Making</th>
+  //           <th>Total ₹</th>
+  //           <th></th>
+  //         </tr>
+  //       </thead>
+
+  //       <tbody>
+  //         {items.map((item, i) => (
+  //           <tr key={i}>
+  //             <td>
+  //               <input
+  //                 value={item.item_name}
+  //                 onChange={(e) => updateItem(i, "item_name", e.target.value)}
+  //               />
+  //             </td>
+
+  //             <td>
+  //               <select
+  //                 value={item.metal}
+  //                 onChange={(e) => updateItem(i, "metal", e.target.value)}
+  //               >
+  //                 <option value="gold">Gold</option>
+  //                 <option value="silver">Silver</option>
+  //               </select>
+  //             </td>
+
+  //             <td>
+  //               <select
+  //                 value={item.purity}
+  //                 onChange={(e) => updateItem(i, "purity", e.target.value)}
+  //               >
+  //                 <option value="24K">24K</option>
+  //                 <option value="22K">22K</option>
+  //                 <option value="18K">18K</option>
+  //                 <option value="Silver">Silver</option>
+  //               </select>
+  //             </td>
+
+  //             <td>
+  //               <input
+  //                 type="number"
+  //                 step="0.001"
+  //                 value={item.weight_grams}
+  //                 onChange={(e) =>
+  //                   updateItem(i, "weight_grams", e.target.value)
+  //                 }
+  //               />
+  //             </td>
+
+  //             <td>
+  //               <input
+  //                 type="number"
+  //                 value={item.rate_per_10g}
+  //                 onChange={(e) =>
+  //                   updateItem(i, "rate_per_10g", e.target.value)
+  //                 }
+  //               />
+  //             </td>
+
+  //             <td>
+  //               <select
+  //                 value={item.making_charge_type}
+  //                 onChange={(e) =>
+  //                   updateItem(i, "making_charge_type", e.target.value)
+  //                 }
+  //               >
+  //                 <option value="fixed">₹ Fixed</option>
+  //                 <option value="percent">% Percent</option>
+  //               </select>
+
+  //               <input
+  //                 type="number"
+  //                 value={item.making_charge_value}
+  //                 onChange={(e) =>
+  //                   updateItem(i, "making_charge_value", e.target.value)
+  //                 }
+  //               />
+  //             </td>
+
+  //             <td>₹ {item.total_amount.toFixed(2)}</td>
+
+  //             <td>
+  //               <button onClick={() => removeItem(i)}>❌</button>
+  //             </td>
+  //           </tr>
+  //         ))}
+  //       </tbody>
+  //     </table>
+
+  //     <button onClick={addItem}>➕ Add Item</button>
+
+  //     {!isEditMode && (
+  //       <>
+  //         <h3>Payment</h3>
+
+  //         <label>
+  //           <input
+  //             type="checkbox"
+  //             checked={takeAdvance}
+  //             onChange={(e) => {
+  //               setTakeAdvance(e.target.checked);
+  //               if (!e.target.checked) setAdvanceAmount("");
+  //             }}
+  //           />
+  //           Take advance payment
+  //         </label>
+
+  //         {takeAdvance && (
+  //           <input
+  //             type="number"
+  //             placeholder="Advance Amount"
+  //             value={advanceAmount}
+  //             onChange={(e) => setAdvanceAmount(e.target.value)}
+  //           />
+  //         )}
+  //       </>
+  //     )}
+
+  //     <h3>Summary</h3>
+
+  //     <label>
+  //       <input
+  //         type="checkbox"
+  //         checked={isGST}
+  //         onChange={(e) => setIsGST(e.target.checked)}
+  //       />
+  //       Apply GST (3%)
+  //     </label>
+
+  //     <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
+
+  //     {isGST && (
+  //       <>
+  //         <p>SGST (1.5%): ₹{sgst.toFixed(2)}</p>
+  //         <p>CGST (1.5%): ₹{cgst.toFixed(2)}</p>
+  //       </>
+  //     )}
+
+  //     <h2>Grand Total: ₹{grandTotal.toFixed(2)}</h2>
+
+  //     {error && <p style={{ color: "red" }}>{error}</p>}
+
+  //     <button disabled={loading} onClick={saveBill}>
+  //       {loading ? "Saving..." : isEditMode ? "✏️ Update Bill" : "💾 Save Bill"}
+  //     </button>
+  //   </div>
+  // );
 };
 
 export default BillingForm;

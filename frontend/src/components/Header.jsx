@@ -1,50 +1,82 @@
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+
+const base =
+  "px-3 py-1.5 rounded-md text-sm font-medium transition-all";
+
+const inactive =
+  "text-gray-800 hover:bg-white/40";
+
+const active =
+  "bg-white/70 text-gray-900 shadow";
 
 const Header = () => {
-  const location = useLocation();
-
-  const linkStyle = (path) => ({
-    marginRight: 15,
-    fontWeight: location.pathname === path ? "bold" : "normal",
-    textDecoration: "none",
-    color: "#000",
-  });
-
   return (
-    <div
-      style={{
-        padding: "10px 15px",
-        borderBottom: "2px solid #000",
-        marginBottom: 20,
-        background: "#f8f8f8",
-      }}
-    >
-      <b style={{ marginRight: 20 }}>Jewellery Shop</b>
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-amber-200/60 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-6">
+        {/* Logo / Title */}
+        <div className="text-base font-semibold text-amber-900">
+          Jewellery Shop
+        </div>
 
-      <Link to="/" style={linkStyle("/")}>
-        ➕ New Bill
-      </Link>
+        {/* Navigation */}
+        <nav className="flex flex-wrap gap-1">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
+          >
+            ➕ New Bill
+          </NavLink>
 
-      <Link to="/bills/search" style={linkStyle("/bills/search")}>
-        🔍 Search
-      </Link>
+          <NavLink
+            to="/bills/search"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
+          >
+            🔍 Search
+          </NavLink>
 
-      <Link to="/customers" style={linkStyle("/customers")}>
-        👤 Customers
-      </Link>
+          <NavLink
+            to="/customers"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
+          >
+            👤 Customers
+          </NavLink>
 
-      <Link to="/bills" style={linkStyle("/bills")}>
-        📋 Bills
-      </Link>
+          <NavLink
+            to="/bills"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
+          >
+            📋 Bills
+          </NavLink>
 
-      <Link to="/reports/daily" style={linkStyle("/reports/daily")}>
-        📊 Daily Report
-      </Link>
+          <NavLink
+            to="/reports/daily"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
+          >
+            📊 Reports
+          </NavLink>
 
-      <Link to="/gold-loans" style={linkStyle("/gold-loans")}>
-        🏦 Gold Loans
-      </Link>
-    </div>
+          {/* <NavLink
+            to="/gold-loans"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
+          >
+            🏦 Gold Loans
+          </NavLink> */}
+        </nav>
+      </div>
+    </header>
   );
 };
 

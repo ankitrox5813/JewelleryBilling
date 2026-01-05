@@ -11,6 +11,9 @@ export const generateInvoicePDF = (bill, items, payments, res) => {
 
   doc.pipe(res);
 
+  res.setHeader("X-Print", "true");
+
+
   /* ===== HEADER ===== */
   doc.fontSize(18).text("JEWELLERY SHOP", { align: "center" });
   doc.moveDown(0.5);

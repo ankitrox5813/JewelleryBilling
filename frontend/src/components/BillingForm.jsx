@@ -54,7 +54,7 @@ const BillingForm = () => {
         setCustomer({
           id: bill.customer_id,
           name: bill.customer_name,
-          phone: bill.phone,
+          phone: bill.customer_phone,
         });
 
         setItems(

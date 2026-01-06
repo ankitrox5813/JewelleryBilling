@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
 
@@ -16,20 +16,20 @@ import BillDetails from "./pages/BillDetails";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Header /> {/* ✅ Common header */}
+    <>
+      <Header />
 
       <Routes>
-       {/* Billing */}
+        {/* Billing */}
         <Route path="/" element={<BillingPage />} />
         <Route path="/bills" element={<BillList />} />
-        <Route path="/bills/:id" element={<BillDetails />} />
         <Route path="/bills/search" element={<BillSearch />} />
+        <Route path="/bills/:id" element={<BillDetails />} />
         <Route path="/bills/:id/edit" element={<BillingForm />} />
 
         {/* Customers */}
-        <Route path="/customers" element={<CustomerList />} />     {/* ✅ */}
-        <Route path="/customers/:id" element={<CustomerProfile />} /> {/* ✅ */}
+        <Route path="/customers" element={<CustomerList />} />
+        <Route path="/customers/:id" element={<CustomerProfile />} />
 
         {/* Reports */}
         <Route path="/reports/daily" element={<DailyReport />} />
@@ -39,7 +39,7 @@ function App() {
         <Route path="/gold-loans/new" element={<GoldLoanCreate />} />
         <Route path="/gold-loans/:id" element={<GoldLoanDetails />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
 

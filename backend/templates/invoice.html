@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #000;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #000;
+      margin: 10px 0;
+    }
+
+    /* HEADER */
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .header p {
+      margin: 2px 0;
+      font-size: 11px;
+    }
+
+    /* FLEX ROW */
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    /* BOX */
+    .box {
+      border: 1px solid #000;
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 6px;
+    }
+
+    th {
+      background: #ffffff;
+      font-weight: bold;
+    }
+
+    /* TOTALS */
+    .totals {
+      width: 40%;
+      margin-left: auto;
+      margin-top: 10px;
+    }
+
+    .totals td {
+      border: none;
+      padding: 4px;
+    }
+
+    .totals tr:last-child td {
+      border-top: 1px solid #000;
+      font-weight: bold;
+    }
+
+    /* SIGNATURE */
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .sign-box {
+      width: 40%;
+      text-align: center;
+    }
+
+    .sign-line {
+      border-top: 1px solid #000;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="header center">
+    <h1>GAHNA JEWELLERS</h1>
+    <p>Pandeydih More, Near Shiv Mandir, Sijua, Dhanbad</p>
+    <p><b>GSTIN:</b> 20EYVPS7326M1ZK</p>
+  </div>
+
+  <hr />
+
+  <!-- INVOICE META -->
+  <div class="row">
+    <div>
+      <b>Invoice No:</b> {{invoice_no}}
+    </div>
+    <div>
+      <b>Date:</b> {{invoice_date}}
+    </div>
+  </div>
+
+  <!-- CUSTOMER -->
+  <div class="box">
+    <p><b>Name:</b> {{customer_name}}</p>
+    <p><b>Mobile:</b> {{customer_phone}}</p>
+  </div>
+
+  <!-- ITEMS -->
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Description</th>
+        <th>Weight</th>
+        <th>Rate</th>
+        <th>Making</th>
+        <th class="right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{items_rows}}
+    </tbody>
+  </table>
+
+  <!-- TOTALS -->
+  <table class="totals">
+    <tr>
+      <td>Subtotal</td>
+      <td class="right">{{subtotal}}</td>
+    </tr>
+    <!-- <tr>
+      <td>SGST</td>
+      <td class="right">{{sgst}}</td>
+    </tr>
+    <tr>
+      <td>CGST</td>
+      <td class="right">{{cgst}}</td>
+    </tr> -->
+
+
+  {{gst_rows}}
+
+
+    <tr>
+      <td>Grand Total</td>
+      <td class="right">{{grand_total}}</td>
+    </tr>
+
+    <tr>
+    <td>Paid Amount</td>
+    <td class="right">{{paid_amount}}</td>
+  </tr>
+
+  <tr>
+    <td><strong>Balance Due</strong></td>
+    <td class="right"><strong>{{due_amount}}</strong></td>
+  </tr>
+  </table>
+
+  
+
+  <!-- PAYMENT HISTORY -->
+  {{payments_section}}
+
+  <!-- SIGNATURES -->
+  <div class="signatures">
+    <div class="sign-box">
+      <div class="sign-line"></div>
+      Customer Signature
+    </div>
+    <div class="sign-box">
+      <div class="sign-line"></div>
+      Authorised Signatory
+    </div>
+  </div>
+
+</body>
+</html>
